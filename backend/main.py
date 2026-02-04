@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import Column, Integer, String, Text, select
+from sqlalchemy import Column, Integer, String, Text, select, Boolean
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,8 +29,19 @@ app.add_middleware(
 class Machine(Base):
     __tablename__ = "machines"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    model_number = Column(String(50))
+    name = Column(String(100), nullable=False)      # 通称（例：ユンボ）
+    model_number = Column(String(50))              # 型式（例：PC30UU）
+    serial_number = Column(String(50))             # 機番
+    maker = Column(String(50))                     # メーカー
+    performance = Column(Text)                     # 性能（例：0.11m3）
+    attachment_type = Column(String(100))          # アタッチメント
+
+    # 仕様（Boolean値）
+    has_crane = Column(Boolean, default=False)           # クレーン仕様
+    has_service_port = Column(Boolean, default=False)    # サービスポート付き
+    is_ultra_small_swing = Column(Boolean, default=False) # 超小旋回
+    is_rear_small_swing = Column(Boolean, default=False)  # 後方小旋回
+    
     description = Column(Text)
 
 class User(Base):
@@ -100,4 +111,3 @@ async def create_machine(name: str, model: str, db: AsyncSession = Depends(get_d
     await db.commit()
     await db.refresh(new_machine)
     return new_machine
-    
