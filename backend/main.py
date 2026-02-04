@@ -6,46 +6,81 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Text, select
 from dotenv import load_dotenv
 
-# .envの読み込み
 load_dotenv()
 
-# DB接続情報（docker-composeで設定した環境変数を使用）
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# SQLAlchemyの非同期設定
 engine = create_async_engine(DATABASE_URL, echo=True)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
 
 app = FastAPI(title="重機レンタル予約API")
 
-# CORSの設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://rental.go-pro-world.net"], # フロントエンドのドメイン
+    allow_origins=["https://rental.go-pro-world.net"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# データベースモデル定義（例：重機マスター）
+# --- モデル定義 ---
+
 class Machine(Base):
     __tablename__ = "machines"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    model_number = Column(String(50)) # 型式
+    model_number = Column(String(50))
     description = Column(Text)
 
-# DBセッションの依存注入用
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(100), unique=True, nullable=False)
+    hashed_password = Column(String(100), nullable=False)
+    role = Column(String(20), default="customer") # "admin" or "customer"
+    full_name = Column(String(100))
+
+# --- DB操作 ---
+
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
 
-# アプリ起動時にテーブルを作成（簡易的な方法）
+async def create_seed_data(db_session: AsyncSession):
+    # 管理者の作成
+    result = await db_session.execute(select(User).filter(User.email == "admin@example.com"))
+    if not result.scalars().first():
+        admin = User(
+            email="admin@example.com",
+            hashed_password="password123",
+            role="admin",
+            full_name="管理者ヒサオ"
+        )
+        db_session.add(admin)
+
+    # カスタマーの作成
+    result = await db_session.execute(select(User).filter(User.email == "user@example.com"))
+    if not result.scalars().first():
+        customer = User(
+            email="user@example.com",
+            hashed_password="password123",
+            role="customer",
+            full_name="テスト顧客"
+        )
+        db_session.add(customer)
+    
+    await db_session.commit()
+
 @app.on_event("startup")
-async def startup():
+async def on_startup():
+    # テーブル作成
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # 初期データ投入
+    async with AsyncSessionLocal() as session:
+        await create_seed_data(session)
 
 # --- エンドポイント ---
 
@@ -56,8 +91,7 @@ def read_root():
 @app.get("/machines")
 async def get_machines(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Machine))
-    machines = result.scalars().all()
-    return machines
+    return result.scalars().all()
 
 @app.post("/machines")
 async def create_machine(name: str, model: str, db: AsyncSession = Depends(get_db)):
@@ -66,3 +100,4 @@ async def create_machine(name: str, model: str, db: AsyncSession = Depends(get_d
     await db.commit()
     await db.refresh(new_machine)
     return new_machine
+    

@@ -1,32 +1,60 @@
-// frontend/src/app/page.tsx
-export default async function Home() {
-  // 1. バックエンドからデータを取得（サーバーサイドでの取得）
-  // Dockerネットワーク内なので、サービス名「backend」で通信できます
-  const response = await fetch("http://backend:8000/machines", { cache: 'no-store' });
-  const machines = await response.json();
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function HomePage() {
+  const [user, setUser] = useState<{ email: string; role: string } | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    // ブラウザの保存領域からユーザー情報を取得
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      router.push("/login"); // ログインしてなければログイン画面へ
+    } else {
+      setUser(JSON.parse(savedUser));
+    }
+  }, [router]);
+
+  if (!user) return <div className="p-8">読み込み中...</div>;
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
 
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6 text-blue-600">
-        重機レンタル管理システム
-      </h1>
-      
-      <div className="grid gap-4">
-        {machines.length === 0 ? (
-          <p className="text-gray-500">現在、登録されている重機はありません。</p>
-        ) : (
-          machines.map((machine: any) => (
-            <div key={machine.id} className="border p-4 rounded-lg shadow-sm bg-white">
-              <h2 className="text-xl font-semibold">{machine.name}</h2>
-              <p className="text-gray-600">型番: {machine.model_number}</p>
-              <p className="mt-2 text-sm">{machine.description}</p>
-            </div>
-          ))
-        )}
-      </div>
+    <main className="min-h-screen bg-white p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* ヘッダー部分 */}
+        <div className="flex justify-between items-center mb-12 mt-10">
+          <div className="text-left">
+            <h1 className="text-3xl font-bold text-gray-900">メインメニュー</h1>
+            <p className="text-gray-500">こんにちは、{user.email} さん</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="text-sm text-gray-400 hover:text-gray-600 underline"
+          >
+            ログアウト
+          </button>
+        </div>
 
-      <div className="mt-8 p-4 bg-gray-100 rounded text-sm">
-        <p>✅ バックエンド通信ステータス: {response.ok ? "良好" : "エラー"}</p>
+        {/* メニューボタン */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <button className="p-10 border-2 border-gray-100 rounded-2xl bg-gray-50 hover:bg-white hover:border-gray-800 transition-all text-left">
+            <h2 className="text-xl font-bold mb-2">🚜 予約メニュー</h2>
+            <p className="text-sm text-gray-600">重機の空き状況確認と予約</p>
+          </button>
+
+          {user.role === "admin" && (
+            <button className="p-10 border-2 border-gray-100 rounded-2xl bg-gray-50 hover:bg-white hover:border-gray-800 transition-all text-left">
+              <h2 className="text-xl font-bold mb-2 text-gray-900">🛠️ 管理メニュー</h2>
+              <p className="text-sm text-gray-600">重機登録・顧客管理・点検設定</p>
+            </button>
+          )}
+        </div>
       </div>
     </main>
   );
