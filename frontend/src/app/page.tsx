@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function HomePage() {
   const [user, setUser] = useState<{ email: string; role: string } | null>(null);
@@ -49,10 +50,17 @@ export default function HomePage() {
           </button>
 
           {user.role === "admin" && (
-            <button className="p-10 border-2 border-gray-100 rounded-2xl bg-gray-50 hover:bg-white hover:border-gray-800 transition-all text-left">
-              <h2 className="text-xl font-bold mb-2 text-gray-900">🛠️ 管理メニュー</h2>
-              <p className="text-sm text-gray-600">重機登録・顧客管理・点検設定</p>
-            </button>
+            <Link 
+              href="/admin" 
+              className="p-10 border-2 border-gray-100 rounded-2xl bg-gray-50 hover:bg-white hover:border-gray-800 transition-all text-left block group"
+            >
+              <h2 className="text-xl font-bold mb-2 text-gray-900 group-hover:text-blue-600">
+                🛠️ 管理者メニュー
+              </h2>
+              <p className="text-sm text-gray-600">
+                重機の新規登録・在庫一覧の確認・システム設定
+              </p>
+            </Link>
           )}
         </div>
       </div>
