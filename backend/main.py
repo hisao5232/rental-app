@@ -105,9 +105,24 @@ async def get_machines(db: AsyncSession = Depends(get_db)):
     return result.scalars().all()
 
 @app.post("/machines")
-async def create_machine(name: str, model: str, db: AsyncSession = Depends(get_db)):
-    new_machine = Machine(name=name, model_number=model)
+async def create_machine(
+    machine_data: dict,  # JSONでまとめて受け取る
+    db: AsyncSession = Depends(get_db)
+):
+    new_machine = Machine(
+        name=machine_data.get("name"),
+        model_number=machine_data.get("model_number"),
+        serial_number=machine_data.get("serial_number"),
+        maker=machine_data.get("maker"),
+        performance=machine_data.get("performance"),
+        attachment_type=machine_data.get("attachment_type"),
+        has_crane=machine_data.get("has_crane", False),
+        has_service_port=machine_data.get("has_service_port", False),
+        is_ultra_small_swing=machine_data.get("is_ultra_small_swing", False),
+        is_rear_small_swing=machine_data.get("is_rear_small_swing", False),
+    )
     db.add(new_machine)
     await db.commit()
     await db.refresh(new_machine)
     return new_machine
+

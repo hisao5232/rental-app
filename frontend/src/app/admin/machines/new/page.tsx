@@ -18,12 +18,28 @@ export default function NewMachinePage() {
     is_rear_small_swing: false,
   });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.BaseSyntheticEvent) => {
     e.preventDefault();
-    // ここでバックエンドの API (POST /machines) を叩く処理を後で追加します
-    console.log("登録データ:", formData);
-    alert("登録しました（シミュレーション）");
-    router.push("/");
+
+    try {
+      const response = await fetch("https://api-rental.go-pro-world.net/machines", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        alert("データベースに登録が完了しました！");
+        router.push("/admin"); // 管理メニュー一覧に戻る
+      } else {
+        alert("登録に失敗しました。");
+      }
+    } catch (error) {
+      console.error("通信エラー:", error);
+      alert("サーバーと通信できませんでした。");
+    }
   };
 
   return (
