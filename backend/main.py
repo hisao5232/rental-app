@@ -131,3 +131,25 @@ async def create_machine(
     await db.refresh(new_machine)
     return new_machine
 
+# --- 指定したIDの重機情報を更新する ---
+@app.put("/machines/{machine_id}")
+async def update_machine(machine_id: int, machine_data: dict, db: AsyncSession = Depends(get_db)):
+    # 1. データベースから対象の重機を探す
+    result = await db.execute(select(Machine).where(Machine.id == machine_id))
+    db_machine = result.scalar_one_or_none()
+    
+    # 2. もし見つからなかったらエラーを返す
+    if not db_machine:
+        return {"error": "Machine not found"}
+
+    # 3. 送られてきたデータ（machine_data）で既存のデータを上書きする
+    # キー（名前、型式など）を一つずつチェックして更新
+    for key, value in machine_data.items():
+        if hasattr(db_machine, key):
+            setattr(db_machine, key, value)
+
+    # 4. 変更を確定（コミット）
+    await db.commit()
+    await db.refresh(db_machine)
+    
+    return db_machine

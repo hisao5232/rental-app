@@ -51,12 +51,13 @@ export default function MachineListPage() {
                 <th className="px-6 py-4">性能 / 仕様</th>
                 <th className="px-6 py-4">稼働状態</th>
                 <th className="px-6 py-4 text-right">レンタル料金 (日極/月極)</th>
+                <th className="px-6 py-4 text-center">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {machines.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
+                  <td colSpan={6} className="px-6 py-10 text-center text-gray-400">
                     登録されている重機がありません。
                   </td>
                 </tr>
@@ -91,6 +92,14 @@ export default function MachineListPage() {
                       <div className="text-xs text-gray-500 italic">
                         ¥{Number(m.monthly_rate).toLocaleString()}<span className="text-[10px] ml-1">/月</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Link 
+                        href={`/admin/machines/${m.id}/edit`} 
+                        className="text-blue-600 hover:text-blue-900 font-medium px-3 py-1.5 rounded-md hover:bg-blue-50 transition"
+                      >
+                        編集
+                      </Link>
                     </td>
                   </tr>
                 ))
