@@ -16,6 +16,9 @@ export default function NewMachinePage() {
     has_service_port: false,
     is_ultra_small_swing: false,
     is_rear_small_swing: false,
+    status: "在庫あり",
+    daily_rate: 0,
+    monthly_rate: 0,
   });
 
   const handleSubmit = async (e: React.BaseSyntheticEvent) => {
@@ -32,7 +35,7 @@ export default function NewMachinePage() {
 
       if (response.ok) {
         alert("データベースに登録が完了しました！");
-        router.push("/admin"); // 管理メニュー一覧に戻る
+        router.push("/admin/machines"); 
       } else {
         alert("登録に失敗しました。");
       }
@@ -46,7 +49,7 @@ export default function NewMachinePage() {
     <main className="min-h-screen bg-white p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-8 border-b pb-4">
-          在庫重機 新規登録
+          🚜 在庫重機 新規登録
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -74,6 +77,36 @@ export default function NewMachinePage() {
             </div>
           </div>
 
+          {/* 追加：稼働状況と料金設定エリア */}
+          <div className="bg-blue-50 p-4 rounded-xl space-y-4 border border-blue-100">
+            <p className="text-sm font-bold text-blue-900">レンタル・稼働設定</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600">稼働状態</label>
+                <select 
+                  className="mt-1 w-full p-2 bg-white border border-gray-300 rounded text-sm"
+                  value={formData.status}
+                  onChange={e => setFormData({...formData, status: e.target.value})}
+                >
+                  <option value="在庫あり">在庫あり</option>
+                  <option value="貸出中">貸出中</option>
+                  <option value="点検中">点検中</option>
+                  <option value="休止中">休止中</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600">日極料金 (円)</label>
+                <input type="number" className="mt-1 w-full p-2 bg-white border border-gray-300 rounded text-sm"
+                  onChange={e => setFormData({...formData, daily_rate: Number(e.target.value)})} placeholder="15000" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600">月極料金 (円)</label>
+                <input type="number" className="mt-1 w-full p-2 bg-white border border-gray-300 rounded text-sm"
+                  onChange={e => setFormData({...formData, monthly_rate: Number(e.target.value)})} placeholder="150000" />
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700">性能・スペック</label>
             <input type="text" className="mt-1 w-full p-2 bg-gray-50 border border-gray-300 rounded" 
@@ -91,10 +124,10 @@ export default function NewMachinePage() {
             <p className="text-sm font-bold text-gray-700 mb-2">仕様オプション</p>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { id: "has_crane", label: "クレーン仕様" },
-                { id: "has_service_port", label: "サービスポート" },
-                { id: "is_ultra_small_swing", label: "超小旋回" },
-                { id: "is_rear_small_swing", label: "後方小旋回" },
+                { id: "has_crane", label: "🏗️ クレーン仕様" },
+                { id: "has_service_port", label: "🔌 サービスポート" },
+                { id: "is_ultra_small_swing", label: "🔄 超小旋回" },
+                { id: "is_rear_small_swing", label: "📐 後方小旋回" },
               ].map((item) => (
                 <label key={item.id} className="flex items-center space-x-3 cursor-pointer">
                   <input
@@ -112,7 +145,7 @@ export default function NewMachinePage() {
             <button type="button" onClick={() => router.back()} className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
               キャンセル
             </button>
-            <button type="submit" className="flex-1 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition">
+            <button type="submit" className="flex-1 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-bold">
               登録する
             </button>
           </div>

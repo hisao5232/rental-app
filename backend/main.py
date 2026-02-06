@@ -41,7 +41,9 @@ class Machine(Base):
     has_service_port = Column(Boolean, default=False)    # サービスポート付き
     is_ultra_small_swing = Column(Boolean, default=False) # 超小旋回
     is_rear_small_swing = Column(Boolean, default=False)  # 後方小旋回
-    
+    status = Column(String(20), default="在庫あり") # 稼働中、在庫あり、点検中 など
+    daily_rate = Column(Integer, default=0)      # 日極料金
+    monthly_rate = Column(Integer, default=0)    # 月極料金
     description = Column(Text)
 
 class User(Base):
@@ -120,6 +122,9 @@ async def create_machine(
         has_service_port=machine_data.get("has_service_port", False),
         is_ultra_small_swing=machine_data.get("is_ultra_small_swing", False),
         is_rear_small_swing=machine_data.get("is_rear_small_swing", False),
+        status=machine_data.get("status", "在庫あり"),
+        daily_rate=int(machine_data.get("daily_rate", 0)),
+        monthly_rate=int(machine_data.get("monthly_rate", 0)),
     )
     db.add(new_machine)
     await db.commit()
