@@ -79,6 +79,8 @@ class Reservation(Base):
     attachment = Column(String(100))   # 希望アタッチメント
     options = Column(Text)             # JSON形式の文字列などで保存
     message = Column(Text)             # 備考
+    site_address = Column(Text)              # 追加
+    needs_transport = Column(Boolean, default=False)  # 追加
     created_at = Column(DateTime, default=datetime.datetime.now)
 
 # --- DB操作 ---
@@ -191,6 +193,8 @@ async def create_reservation(res_data: dict, db: AsyncSession = Depends(get_db))
         maker=res_data.get("maker"),
         attachment=res_data.get("attachment"),
         options=str(res_data.get("options")), # dictを文字列にして保存
+        site_address=res_data.get("siteAddress"),     # 追加
+        needs_transport=res_data.get("needsTransport"), # 追加
         message=res_data.get("message")
     )
     db.add(new_res)
