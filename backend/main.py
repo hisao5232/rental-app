@@ -1,17 +1,22 @@
 import os
-import datetime  # 追加
+import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import Column, Integer, String, Text, select, Boolean, DateTime # DateTime追加
+from sqlalchemy import Column, Integer, String, Text, select, Boolean, DateTime
 from dotenv import load_dotenv
+from pydantic import BaseModel  # 追加
+from passlib.context import CryptContext  # 追加
 
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_async_engine(DATABASE_URL, echo=True)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
+
+# パスワードハッシュ化の設定
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 app = FastAPI(title="重機レンタル予約 API")
 
@@ -22,6 +27,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- スキーマ定義 (リクエスト用) ---
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    full_name: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 # --- モデル定義 ---
 
@@ -72,11 +87,12 @@ async def get_db():
         yield session
 
 async def create_seed_data(db_session: AsyncSession):
+    # 管理者の初期データ（パスワードをハッシュ化して保存）
     result = await db_session.execute(select(User).filter(User.email == "admin@example.com"))
     if not result.scalars().first():
         admin = User(
             email="admin@example.com",
-            hashed_password="password123",
+            hashed_password=pwd_context.hash("password123"), # 暗号化
             role="admin",
             full_name="管理者ヒサオ"
         )
@@ -91,6 +107,37 @@ async def on_startup():
         await create_seed_data(session)
 
 # --- エンドポイント ---
+# 新規登録API
+@app.post("/register")
+async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == user_data.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="登録済みのアドレスです")
+    
+    new_user = User(
+        email=user_data.email,
+        hashed_password=pwd_context.hash(user_data.password),
+        full_name=user_data.full_name,
+        role="customer"
+    )
+    db.add(new_user)
+    await db.commit()
+    return {"message": "success"}
+
+# ログインAPI
+@app.post("/login")
+async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+    
+    if not user or not pwd_context.verify(data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="メールアドレスまたはパスワードが正しくありません")
+    
+    return {
+        "email": user.email,
+        "role": user.role,
+        "full_name": user.full_name
+    }
 
 @app.get("/")
 def read_root():
