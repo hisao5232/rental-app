@@ -20,9 +20,14 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 app = FastAPI(title="重機レンタル予約 API")
 
+origins = [
+    "https://rental.go-pro-world.net",
+    "https://*.pages.dev", # Cloudflare Pagesのプレビュー用
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://rental.go-pro-world.net"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
