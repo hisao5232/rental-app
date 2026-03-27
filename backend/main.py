@@ -21,6 +21,7 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 app = FastAPI(title="重機レンタル予約 API")
 
 origins = [
+    "https://rental-app-rosy.vercel.app",  # あなたのVercelドメイン
     "https://rental.go-pro-world.net",
     "https://*.pages.dev", # Cloudflare Pagesのプレビュー用
 ]
