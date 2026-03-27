@@ -39,28 +39,6 @@ services:
       timeout: 5s
       retries: 5
 
-  frontend:
-    build: ./frontend
-    container_name: rental-frontend
-    restart: always
-    volumes:
-      - ./frontend:/app           # ローカルのファイルをコンテナに同期
-      - /app/node_modules         # コンテナ内のnode_modulesを保護（上書き禁止）
-      - /app/.next                # コンテナ内のビルド成果物を保護（上書き禁止）
-    networks:
-      - traefik-public
-      - internal
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.rental-web.rule=Host(`rental.go-pro-world.net`)"
-      - "traefik.http.routers.rental-web.entrypoints=websecure"
-      - "traefik.http.routers.rental-web.tls=true"
-      - "traefik.http.routers.rental-web.tls.certresolver=lets-encrypt"
-      - "traefik.http.services.rental-web.loadbalancer.server.port=3000"
-      - "traefik.docker.network=traefik-public"
-    stdin_open: true
-    tty: true
-
 networks:
   traefik-public:
     external: true
