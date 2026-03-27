@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* 静的書き出しを有効にする */
-  output: 'export',
-  /* 画像の最適化を無効にする（Cloudflare Pages の静的エクスポートでは非対応のため） */
+  /* Vercelでは動的レンダリングが標準で使えるため、
+     Cloudflare Pages用の output: 'export' は削除またはコメントアウトします */
+  // output: 'export',
+
   images: {
     unoptimized: true,
   },
